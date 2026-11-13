@@ -1,0 +1,86 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+    tags: [ 'v*' ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-and-test:
+    name: Build & Test (${{ matrix.compiler }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        compiler: [gcc, clang]
+
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v4
+
+      - name: Install build toolchain
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential ${{ matrix.compiler }}
+
+      - name: Clean build
+        run: |
+          make clean
+          make CC=${{ matrix.compiler }} all
+
+      - name: Run verification test suite
+        run: |
+          make CC=${{ matrix.compiler }} test
+
+      - name: Verify CLI scan command (Hardened Policy -> Exit 0)
+        run: |
+          ./bin/lh-tpm2 scan fixtures/hardened_tpm2_policy.json --no-color
+          ./bin/lh-tpm2 scan fixtures/hardened_tpm2_policy.json --format=json
+          ./bin/lh-tpm2 scan fixtures/hardened_tpm2_policy.json --format=sarif
+
+      - name: Verify CLI scan command (Vulnerable Policy -> Exit 1)
+        run: |
+          if ./bin/lh-tpm2 scan fixtures/vulnerable_tpm2_policy.json --no-color; then
+            echo "Expected exit code 1 for vulnerable policy"
+            exit 1
+          else
+            echo "Successfully caught vulnerable policy violations"
+          fi
+
+      - name: Verify End-to-End PCR Extend, PolicyPCR, Seal & Unseal Workflow
+        run: |
+          ./bin/lh-tpm2 pcr-extend --boot-log=fixtures/sample_pcr_boot_log.json --bank-out=/tmp/ci_bank.bin
+          ./bin/lh-tpm2 policy-pcr --mask=0x000095 --bank-in=/tmp/ci_bank.bin
+          ./bin/lh-tpm2 seal \
+            --srk-seed=00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff \
+            --mask=0x000095 \
+            --secret="CI_LUKS_MASTER_KEY_2026" \
+            --auth=123456 \
+            --bank-in=/tmp/ci_bank.bin \
+            --out=/tmp/ci_secret.sealed
+          ./bin/lh-tpm2 unseal \
+            --srk-seed=00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff \
+            --auth=123456 \
+            --bank-in=/tmp/ci_bank.bin \
+            --in=/tmp/ci_secret.sealed
+
+      - name: Verify Quote Generation & Remote Attestation Workflow
+        run: |
+          ./bin/lh-tpm2 quote \
+            --aik-key=11223344556677889900aabbccddeeff11223344556677889900aabbccddeeff \
+            --nonce=99887766554433221100ffeeddccbbaa99887766554433221100ffeeddccbbaa \
+            --mask=0x000095 \
+            --bank-in=/tmp/ci_bank.bin \
+            --out=/tmp/ci_quote.json
+          ./bin/lh-tpm2 verify-quote \
+            --aik-key=11223344556677889900aabbccddeeff11223344556677889900aabbccddeeff \
+            --nonce=99887766554433221100ffeeddccbbaa99887766554433221100ffeeddccbbaa \
+            --bank-in=/tmp/ci_bank.bin \
+            --quote=/tmp/ci_quote.json
+
+      - name: Verify Clean Distribution Tarball Generation
+        run: |
+          make dist
+          tar -tzvf dist/lh-tpm2-provisioner-v0.1.0.tar.gz

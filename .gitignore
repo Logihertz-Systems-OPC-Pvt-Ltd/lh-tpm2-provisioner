@@ -1,0 +1,24 @@
+# Compiled binaries and libraries
+/bin/
+bin/
+*.o
+*.a
+*.so
+*.dylib
+
+# Build directories
+build/
+dist/
+
+# Test executables and artifacts
+tests/test_runner
+*.sealed
+*.tmp
+*.log
+
+# Editor and system artifacts
+.vscode/
+.idea/
+*.swp
+*~
+.DS_Store

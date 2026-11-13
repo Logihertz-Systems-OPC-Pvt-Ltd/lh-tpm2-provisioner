@@ -1,0 +1,33 @@
+{
+  "system": "Logihertz Sovereign Appliance Model A4",
+  "log_version": "TCG-2.0",
+  "events": [
+    {
+      "pcr": 0,
+      "event_type": "EV_S_CRTM_VERSION",
+      "data": "CRTM v1.4.2-lh-release-sovereign-core"
+    },
+    {
+      "pcr": 0,
+      "event_type": "EV_POST_CODE",
+      "data": "UEFI Core Firmware Initialization Stage 1"
+    },
+    {
+      "pcr": 2,
+      "event_type": "EV_EFI_BOOT_SERVICES_DRIVER",
+      "data": "PCIe NVMe Controller Option ROM Driver v2.1"
+    },
+    {
+      "pcr": 4,
+      "event_type": "EV_COMPACT_HASH",
+      "digest": "5f16e81f1816e1f0e2b920bf8e329d49463200b3e70d4ab5c868eb3db4b83030",
+      "data": "GRUB2 Embedded Bootloader Image"
+    },
+    {
+      "pcr": 7,
+      "event_type": "EV_EFI_VARIABLE_DRIVER_CONFIG",
+      "digest": "2c26b46b68ffc68ff99b453c1d30413413422d706483bfa0f98a5e886266e7ae",
+      "data": "SecureBootEnabled=1;PK=LogihertzProdPK2026;KEK=LogihertzProdKEK2026;db=LogihertzProdDB2026"
+    }
+  ]
+}
