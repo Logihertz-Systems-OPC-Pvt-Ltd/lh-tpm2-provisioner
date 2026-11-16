@@ -1,0 +1,9 @@
+Package: lh-tpm2-provisioner
+Version: 0.1.0
+Section: utils
+Priority: optional
+Architecture: amd64
+Maintainer: Sameer Tawade <ops@logihertz.com>
+Homepage: https://www.logihertz.com
+Description: lh-tpm2 - TPM 2.0 SHA-256 Platform Configuration Register Extension
+ Zero-dependency C11 hardware TPM 2.0 provisioning engine implementing ISO/IEC 11889 TPM2_PCR_Extend, TPM2_PolicyPCR (0x0000017F) trial sessions, PCR-bound LUKS secret sealing, and TPMS_ATTEST quote verification.
